@@ -2,21 +2,28 @@ import cv2
 from matplotlib import pyplot as plt
 import numpy as np
 
-def detect_color(img):
+def detect_red_color(img):
+
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    
+    red = cv2.inRange(hsv, (165,127,127), (175, 255, 255))#Werte evtl anpassen
+
+    target = cv2.bitwise_and(img, img, mask=red)
+
+    return target
+
+def detect_green_color(img):
 
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     
     green = cv2.inRange(hsv,(36, 0, 0), (54, 255,255))
-    #red = cv2.inRange(hsv, (165,127,127), (175, 255, 255))#Werte evtl anpassen
-
-    #mask = cv2.bitwise_or(green, red)
 
     target = cv2.bitwise_and(img, img, mask=green)
 
     return target
 
 def detect_circles(target_img):
-    target_gray = cv2.cvtColor(target, cv2.COLOR_BGR2GRAY)
+    target_gray = cv2.cvtColor(target_img, cv2.COLOR_BGR2GRAY)
 
     _,thresh2 = cv2.threshold(target_gray, 0, 255, cv2.THRESH_BINARY)
 
@@ -27,7 +34,7 @@ def detect_circles(target_img):
     if circles is not None:
         circles = np.round(circles[0, :]).astype("int")
 
-        return circles
+        return circles  
 
 def detect_dark_rectangle(img):
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -62,7 +69,6 @@ def detect_traffic_light(rectangle_values, circles):
         for x,y,w,h in rectangle_values:
             for x_circle, y_circle, r_circle in circles:
                 if x < x_circle < x + w and y < y_circle < y + h:
-                    print("Traffic light detected") #welches Viereck?
                     return True   
 
     return False
@@ -94,21 +100,40 @@ def display(images):
         plt.xticks([]),plt.yticks([])
     plt.show()
 
-image = cv2.imread("image.jpg")
+original_image = cv2.imread("image.jpg")
 
-target = detect_color(image)
+shape = original_image.shape
 
+scale_percent = 100 # percent of original size
+width = int(original_image.shape[1] * scale_percent / 100)
+height = int(original_image.shape[0] * scale_percent / 100)
+dim = (width, height) 
+
+image = cv2.resize(original_image,dim)
+
+target = detect_green_color(image)
 circles = detect_circles(target)
+
+if circles is None:
+    target = detect_red_color(image)
+    circles = detect_circles(target)
+
+    if circles is None:
+        print("No traffic light detected")
+
+    else:
+        print("Red traffic light detected")
+else:
+    print("Green traffic light detected")    
 
 rectangles = detect_dark_rectangle(image)
 
 detected = detect_traffic_light(rectangles, circles)
 
 if detected:
-    images_to_display = [image, target, draw_rectangle(image, rectangles), draw_circle(image, circles)]
+    painted_image = image.copy()
+
+    images_to_display = [image, target, draw_rectangle(painted_image, rectangles), draw_circle(painted_image, circles)]
 
     display(images_to_display)
-
-else:
-    print("No traffic light detected")
 
