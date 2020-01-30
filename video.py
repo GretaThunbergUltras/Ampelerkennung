@@ -108,12 +108,15 @@ while(cap.isOpened()):
         print("No light found")
         continue
 
-    elif circles_green is not None:
+    if circles_green is not None:
         draw_circle(final_image, circles_green)
 
-    elif circles_red is not None:
+    if circles_red is not None:
         draw_circle(final_image, circles_red)   
 
+    cv2.imshow('11',final_image)
+    if cv2.waitKey(1000) & 0xFF == ord('q'):
+        break    
 
     #Rechtecke
     rectangles = detect_dark_rectangle(frame)
@@ -121,6 +124,10 @@ while(cap.isOpened()):
     if not rectangles:
         print("No rectangle found")
         continue
+
+    #cv2.imshow('12',final_image)    
+    #if cv2.waitKey(1) & 0xFF == ord('q'):
+    #    break 
 
     else:
         print("Rectangles and circles found")
