@@ -1,5 +1,7 @@
 import numpy as np
 import cv2
+import time
+
 def detect_red_color(img):
 
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -84,7 +86,7 @@ def detect_traffic_light(rectangle_values, circles):
     return False
 
 
-
+start = time.time()
 
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
@@ -115,7 +117,7 @@ while(cap.isOpened()):
         draw_circle(final_image, circles_red)   
 
     cv2.imshow('11',final_image)
-    if cv2.waitKey(1000) & 0xFF == ord('q'):
+    if cv2.waitKey(100) & 0xFF == ord('q'): #Wert ändern
         break    
 
     #Rechtecke
@@ -160,3 +162,8 @@ while(cap.isOpened()):
 # When everything done, release the capture
 cap.release()
 cv2.destroyAllWindows()
+
+
+end = time.time()
+sek = end - start
+print(sek)
