@@ -69,7 +69,11 @@ def draw_circle(image, circles):
 
     return circles_image    
 
-def detect_dark_rectangle(img):
+def detect_dark_rectangle(img, circles):
+    x_circle,y_circle = circles
+
+    img = img[y_circle - 120:y_circle + 120, x_circle - -75:x_circle + 75]
+
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     blur = cv2.medianBlur(img_gray,5)#Fehlerquelle 2
@@ -155,16 +159,18 @@ while(cap.isOpened()):
 
     if circles_green is not None:
         draw_circle(final_image, circles_green)
+        rectangles = detect_dark_rectangle(frame, circles_green)
 
-    if circles_red is not None:
-        draw_circle(final_image, circles_red)   
+    if circles_red is not None and rectangles is None:
+        draw_circle(final_image, circles_red)  
+        rectangles = detect_dark_rectangle(frame, circles_red) 
 
     cv2.imshow('11',final_image)
     if cv2.waitKey(100) & 0xFF == ord('q'): #Wert ändern
         break    
 
     #Rechtecke
-    rectangles = detect_dark_rectangle(frame)
+    #rectangles = detect_dark_rectangle(frame, circles_green)
 
     if rectangles is None:
         print("No rectangle found")
