@@ -6,7 +6,7 @@ trafficlight_red_cascade = cv2.CascadeClassifier("traffic_light.xml")
 
 cap = cv2.VideoCapture(0) #Camera on
 while True:
-    ret, img = cap.read()
+    img = cap.read()
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #take image into grayscale
     green = trafficlight_green_cascade_cascade.detectMultiScale(gray, 1.3, 5)
     red = trafficlight_red_cascade_cascade.detectMultiScale(gray, 1.3, 5)
