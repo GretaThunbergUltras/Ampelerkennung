@@ -2,8 +2,40 @@ import numpy as np
 import time
 import cv2
 from botlib.motor import Motor
+from botlib.bot import Bot
 import brickpi3
-import LineTracking as lt
+
+APPROACH_POWER, DEFAULT_POWER = 30, 30
+RIGHT_MIN, RIGHT_MAX = 20, 40
+FRONT_MIN, FRONT_MAX = 0, 30
+COLLECT_TIMES = 5
+
+def __init__(self):
+    self._bot = Bot()
+    self._bot.calibrate()
+    
+def follow_line(self):
+    from multiprocessing import Process
+
+    # Dieser endlose Iterator liefert Lenkunswerte
+    # um auf der Linie zu bleiben.
+    linetracker = self._bot.linetracker()
+    self._track_paused = False
+
+    def follow():
+        for improve in linetracker:
+            if improve != None:
+                self._bot.drive_steer(improve)
+                sleep(0.1)
+
+            # Wenn Line Tracking angehalten wurde gehe
+            # in eine Schleife
+            # TODO: Das ist ziemlich ineffizient
+            while self._track_paused:
+                sleep(0.1)
+
+    self._track_thread = Process(group=None, target=follow, daemon=True)
+    self._track_thread.start()
 
 def detect_red_color(img): #Rote Farbe (über Helligkeit) erkennen
 
@@ -115,7 +147,7 @@ if cap.isOpened()==False: #Überprüfen, ob Kamera bereit ist
     cap.open(0)
 
 #Motor._bp.set_motor_power(BP.PORT_B, 20)
-lt.LineTracking()
+self.follow_line()
 
 start = time.time()
 
