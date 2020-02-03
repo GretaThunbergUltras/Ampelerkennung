@@ -148,8 +148,9 @@ class Ampelerkennung:
             cap.open(0)
         
         #Motor._bp.set_motor_power(BP.PORT_B, 20)
+        print("a")
         self.follow_line()
-        
+        print("b")
         start = time.time()
         
         while(cap.isOpened()):
