@@ -1,5 +1,6 @@
 import numpy as np
 import time
+import datetime
 import cv2
 from botlib.motor import Motor
 import brickpi3
@@ -26,15 +27,20 @@ def detect_green_color(img):
 
 def detect_circles(target_img):
     gray = cv2.cvtColor(target_img, cv2.COLOR_BGR2GRAY)
-    ret,thresh = cv2.threshold(gray,127,255,cv2.THRESH_BINARY)
+    ret,thresh = cv2.threshold(gray,60,255,cv2.THRESH_BINARY)
+    cv2.imshow("Thresh", thresh)
+    cv2.waitKey(1)
     if ret == False:
+      print("falsch")
       return None
-       
-    cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    cnts, _ = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     x_values = []
     y_values = []
-
+    if cnts is None:
+       print("nichts")
+       return None
     for c in cnts:
         M = cv2.moments(c)
         
@@ -42,13 +48,12 @@ def detect_circles(target_img):
             cX = int(M["m10"] / M["m00"])
             cY = int(M["m01"] / M["m00"])
         else:
-            cX, cY = 0, 0
-        return None
-
+            continue
         x_values.append(cX)
         y_values.append(cY)
 
-    return [x_values, y_values]     
+    xy = list(zip(x_values, y_values))
+    return xy
 
 def draw_circle(image, circles): 
    x,y = circles
@@ -85,25 +90,23 @@ def detect_dark_rectangle(img, circles):
         y = approx.ravel()[1]
 
         if len(approx) == 4:
-            x, y, w, h = cv2.boundingRect(approx)#minAreaRect()?
+            x, y, w, h = cv2.boundingRect(approx)
+
             for x_circle,y_circle in circles:
-                if x < x_circle < x + w and y < y_circle < y + h and w > 10:
+                if x < x_circle < x + w and y < y_circle < y + h and w > 10 and w < 40:
                     rectangle_values.append([x,y,w,h])
                     w_values.append(w)
 
-    #print(w_values)
     if rectangle_values is None:
        return None
 
     w_sorted = sorted(w_values)
-    print(w_sorted)
 
     for i in range(len(rectangle_values)):
        if len(rectangle_values) == 1:
           return rectangle_values[0]
        if rectangle_values[i][2] == w_sorted[1]:
           return rectangle_values[i]
-
 
 #Main
 
@@ -115,8 +118,17 @@ if cap.isOpened()==False:
     print("ich bin hier")
     cap.open(0)
 
+Motor._bp.set_motor_power(BP.PORT_B, 20)
+
+start = time.time()
+
 while(cap.isOpened()):
     # Capture frame-by-frame
+    end = time.time()
+
+    if end - start > 20:
+       break
+
     ret, frame = cap.read()
     if not ret:
         print("Frame could not be captured")
@@ -129,7 +141,6 @@ while(cap.isOpened()):
     midx = int(width/ 2)
 
     frame = frame[0:height,midx:width]
-    #print(img.shape)
     
 
     target_green = detect_green_color(frame)
@@ -144,29 +155,29 @@ while(cap.isOpened()):
     circles_green = detect_circles(target_green)
     circles_red = detect_circles(target_red)
 
-    if circles_green is None and circles_red is None:
+    if not circles_green and not circles_red:
        continue
 
     final_image = frame.copy()
 
-    if circles_green is not None:
+    if circles_green:
        rectangles_green = detect_dark_rectangle(frame, circles_green)
        if rectangles_green is not None:
           green_image = frame.copy()
-          draw_circle(green_image, circles_green)
+          #draw_circle(green_image, circles_green)
  
           draw_rectangle(green_image, rectangles_green, False)
           final_image = green_image
           print("Grüne Ampel")
           Motor._bp.set_motor_power(BP.PORT_B, 20)
     
-    if circles_red is not None:
+    if circles_red:
        rectangles_red = detect_dark_rectangle(frame, circles_red)
 
        if rectangles_red is not None:
           red_image = frame.copy()
           
-          draw_circle(red_image, circles_red)
+          #draw_circle(red_image, circles_red)
           draw_rectangle(red_image, rectangles_red, True)
           final_image = red_image
 
@@ -176,6 +187,7 @@ while(cap.isOpened()):
     cv2.imshow("Ampel", final_image)
     cv2.waitKey(1)
 
+Motor._bp.set_motor_power(BP.PORT_B, 0)
 
 cap.release()
 cv2.destroyAllWindows()

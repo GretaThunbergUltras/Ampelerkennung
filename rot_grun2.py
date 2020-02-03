@@ -108,6 +108,8 @@ if cap.isOpened()==False:
     print("ich bin hier")
     cap.open(0)
 
+BP.set_motor_power(BP.PORT_B, 20)
+
 while(cap.isOpened()):
     # Capture frame-by-frame
     ret, frame = cap.read()
@@ -172,3 +174,4 @@ while(cap.isOpened()):
 
 cap.release()
 cv2.destroyAllWindows()
+Motor._bp.set_motor_power(BP.PORT_B, 0)
