@@ -1,7 +1,8 @@
 import numpy as np
 import time
 import cv2
-
+from botlib.motor import Motor
+import brickpi3
 
 def detect_red_color(img):
 
@@ -79,7 +80,7 @@ def detect_dark_rectangle(img, circles):
 
         if len(approx) == 4:
             x, y, w, h = cv2.boundingRect(approx)#minAreaRect()?
-            if x < x_circle < x + w and y < y_circle < y + h:
+            if x < x_circle < x + w and y < y_circle < y + h and w > 10:
                rectangle_values.append([x,y,w,h])
                w_values.append(w)
 
@@ -98,6 +99,9 @@ def detect_dark_rectangle(img, circles):
 
 
 #Main
+
+BP = brickpi3.BrickPi3()
+
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
 if cap.isOpened()==False:
@@ -147,6 +151,7 @@ while(cap.isOpened()):
           draw_rectangle(green_image, rectangles_green, False)
           final_image = green_image
           print("Grüne Ampel")
+          Motor._bp.set_motor_power(BP.PORT_B, 20)
     
     if circles_red is not None:
        rectangles_red = detect_dark_rectangle(frame, circles_red)
@@ -159,6 +164,7 @@ while(cap.isOpened()):
           final_image = red_image
 
           print("Rote Ampel")
+          Motor._bp.set_motor_power(BP.PORT_B, 0)
 
     cv2.imshow("Ampel", final_image)
     cv2.waitKey(1)
