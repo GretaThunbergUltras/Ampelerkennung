@@ -138,77 +138,80 @@ class Ampelerkennung:
                 return rectangle_values[i]
     
     #Main
-    
-    BP = brickpi3.BrickPi3()
-    
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    
-    if cap.isOpened()==False: #Überprüfen, ob Kamera bereit ist
-        print("ich bin hier")
-        cap.open(0)
-    
-    #Motor._bp.set_motor_power(BP.PORT_B, 20)
-    self.follow_line()
-    
-    start = time.time()
-    
-    while(cap.isOpened()):
-        end = time.time()
-    
-        if end - start > 20: #nach 20 Sekunden abbrechen
-            break
-    
-        ret, frame = cap.read()
-        if not ret:
-            print("Frame could not be captured")
-            break
+    def run(self):
+        BP = brickpi3.BrickPi3()
         
-        height = frame.shape[0]
-    
-        width  = frame.shape[1]
-        midx = int(width/ 2)
-    
-        frame = frame[0:height, midx:width] #Nur auf rechte Seite des Bildes fokussieren
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         
-    
-        target_green = detect_green_color(frame)
-        target_red = detect_red_color(frame)
-    
-        circles_green = detect_circles(target_green)
-        circles_red = detect_circles(target_red)
-    
-        if not circles_green and not circles_red:
-            continue
-    
-        final_image = frame.copy()
-    
-        if circles_green:
-            rectangles_green = detect_dark_rectangle(frame, circles_green)
-    
-            if rectangles_green is not None: #Grünes Licht in Rechteck erkannt -> geradeaus fahren
-                green_image = frame.copy()
-     
-                draw_rectangle(green_image, rectangles_green, False)
-                final_image = green_image
-                print("Grüne Ampel")
-    #            Motor._bp.set_motor_power(BP.PORT_B, 20)
+        if cap.isOpened()==False: #Überprüfen, ob Kamera bereit ist
+            print("ich bin hier")
+            cap.open(0)
         
-        if circles_red:
-            rectangles_red = detect_dark_rectangle(frame, circles_red)
-    
-            if rectangles_red is not None: #Rotes Licht in Rechteck erkannt -> Anhalten
-                red_image = frame.copy()
-              
-                draw_rectangle(red_image, rectangles_red, True)
-                final_image = red_image
-    
-                print("Rote Ampel")
-    #            Motor._bp.set_motor_power(BP.PORT_B, 0)
-    
-        cv2.imshow("Ampel", final_image) 
-        cv2.waitKey(1)
-    
-    #Motor._bp.set_motor_power(BP.PORT_B, 0)
-    
-    cap.release()
-    cv2.destroyAllWindows()
+        #Motor._bp.set_motor_power(BP.PORT_B, 20)
+        self.follow_line()
+        
+        start = time.time()
+        
+        while(cap.isOpened()):
+            end = time.time()
+        
+            if end - start > 20: #nach 20 Sekunden abbrechen
+                break
+        
+            ret, frame = cap.read()
+            if not ret:
+                print("Frame could not be captured")
+                break
+            
+            height = frame.shape[0]
+        
+            width  = frame.shape[1]
+            midx = int(width/ 2)
+        
+            frame = frame[0:height, midx:width] #Nur auf rechte Seite des Bildes fokussieren
+            
+        
+            target_green = detect_green_color(frame)
+            target_red = detect_red_color(frame)
+        
+            circles_green = detect_circles(target_green)
+            circles_red = detect_circles(target_red)
+        
+            if not circles_green and not circles_red:
+                continue
+        
+            final_image = frame.copy()
+        
+            if circles_green:
+                rectangles_green = detect_dark_rectangle(frame, circles_green)
+        
+                if rectangles_green is not None: #Grünes Licht in Rechteck erkannt -> geradeaus fahren
+                    green_image = frame.copy()
+         
+                    draw_rectangle(green_image, rectangles_green, False)
+                    final_image = green_image
+                    print("Grüne Ampel")
+        #            Motor._bp.set_motor_power(BP.PORT_B, 20)
+            
+            if circles_red:
+                rectangles_red = detect_dark_rectangle(frame, circles_red)
+        
+                if rectangles_red is not None: #Rotes Licht in Rechteck erkannt -> Anhalten
+                    red_image = frame.copy()
+                  
+                    draw_rectangle(red_image, rectangles_red, True)
+                    final_image = red_image
+        
+                    print("Rote Ampel")
+        #            Motor._bp.set_motor_power(BP.PORT_B, 0)
+        
+            cv2.imshow("Ampel", final_image) 
+            cv2.waitKey(1)
+        
+        #Motor._bp.set_motor_power(BP.PORT_B, 0)
+        
+        cap.release()
+        cv2.destroyAllWindows()
+
+if __name__=='__main__':
+    Ampelerkennung().run()
